@@ -204,7 +204,7 @@ class View
      */
     public function setTemplatesDirectory($directory)
     {
-        $this->templatesDirectory = rtrim($directory, DIRECTORY_SEPARATOR);
+        $this->templatesDirectory = rtrim($directory, '/');
     }
 
     /**
