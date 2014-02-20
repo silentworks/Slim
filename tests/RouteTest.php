@@ -6,7 +6,7 @@
  * @copyright   2011 Josh Lockhart
  * @link        http://www.slimframework.com
  * @license     http://www.slimframework.com/license
- * @version     2.3.4
+ * @version     2.4.2
  *
  * MIT LICENSE
  *
@@ -65,6 +65,23 @@ class RouteTest extends PHPUnit_Framework_TestCase
         $route = new \Slim\Route('/foo', $callable);
 
         $this->assertSame($callable, $route->getCallable());
+    }
+
+    public function testGetCallableAsClass()
+    {
+        $route = new \Slim\Route('/foo', '\Slim\Router:getCurrentRoute');
+
+        $callable = $route->getCallable();
+        $this->assertInstanceOf('\Slim\Router', $callable[0]);
+        $this->assertEquals('getCurrentRoute', $callable[1]);
+    }
+
+    public function testGetCallableAsStaticMethod()
+    {
+        $route = new \Slim\Route('/bar', '\Slim\Slim::getInstance');
+
+        $callable = $route->getCallable();
+        $this->assertEquals('\Slim\Slim::getInstance', $callable);
     }
 
     public function testSetCallable()
@@ -253,6 +270,20 @@ class RouteTest extends PHPUnit_Framework_TestCase
         $route3 = new \Slim\Route($pattern, function () {});
         $this->assertTrue($route3->matches('/archive/2010/05/13'));
         $this->assertEquals(array('year' => '2010', 'month' => '05', 'day' => '13'), $route3->getParams());
+    }
+
+    public function testMatchesIsCaseSensitiveByDefault()
+    {
+        $route = new \Slim\Route('/case/sensitive', function () {});
+        $this->assertTrue($route->matches('/case/sensitive'));
+        $this->assertFalse($route->matches('/CaSe/SensItiVe'));
+    }
+
+    public function testMatchesCanBeCaseInsensitive()
+    {
+        $route = new \Slim\Route('/Case/Insensitive', function () {}, false);
+        $this->assertTrue($route->matches('/Case/Insensitive'));
+        $this->assertTrue($route->matches('/CaSe/iNSensItiVe'));
     }
 
     public function testGetConditions()

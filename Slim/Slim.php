@@ -6,7 +6,7 @@
  * @copyright   2011 Josh Lockhart
  * @link        http://www.slimframework.com
  * @license     http://www.slimframework.com/license
- * @version     2.3.4
+ * @version     2.4.2
  * @package     Slim
  *
  * MIT LICENSE
@@ -40,16 +40,21 @@ if (!extension_loaded('mcrypt')) {
 
 /**
  * Slim
- * @package Slim
- * @author  Josh Lockhart
- * @since   1.0.0
+ * @package  Slim
+ * @author   Josh Lockhart
+ * @since    1.0.0
+ *
+ * @property \Slim\Environment   $environment
+ * @property \Slim\Http\Response $response
+ * @property \Slim\Http\Request  $request
+ * @property \Slim\Router        $router
  */
 class Slim
 {
     /**
      * @const string
      */
-    const VERSION = '2.3.4';
+    const VERSION = '2.4.2';
 
     /**
      * @var \Slim\Helper\Set
@@ -172,8 +177,11 @@ class Slim
         // Default view
         $this->container->singleton('view', function ($c) {
             $viewClass = $c['settings']['view'];
+            $templatesPath = $c['settings']['templates.path'];
 
-            return ($viewClass instanceOf \Slim\View) ? $viewClass : new $viewClass;
+            $view = ($viewClass instanceOf \Slim\View) ? $viewClass : new $viewClass;
+            $view->setTemplatesDirectory($templatesPath);
+            return $view;
         });
 
         // Default log writer
@@ -300,7 +308,9 @@ class Slim
             'cookies.cipher' => MCRYPT_RIJNDAEL_256,
             'cookies.cipher_mode' => MCRYPT_MODE_CBC,
             // HTTP
-            'http.version' => '1.1'
+            'http.version' => '1.1',
+            // Routing
+            'routes.case_sensitive' => true
         );
     }
 
@@ -426,7 +436,7 @@ class Slim
     {
         $pattern = array_shift($args);
         $callable = array_pop($args);
-        $route = new \Slim\Route($pattern, $callable);
+        $route = new \Slim\Route($pattern, $callable, $this->settings['routes.case_sensitive']);
         $this->router->map($route);
         if (count($args) > 0) {
             $route->setMiddleware($args);
@@ -739,7 +749,6 @@ class Slim
         if (!is_null($status)) {
             $this->response->status($status);
         }
-        $this->view->setTemplatesDirectory($this->config('templates.path'));
         $this->view->appendData($data);
         $this->view->display($template);
     }
