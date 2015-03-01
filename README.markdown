@@ -63,6 +63,10 @@ should contain this code:
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [QSA,L]
 
+Additionally, make sure your virtual host is configured with the AllowOverride option so that the .htaccess rewrite rules can be used:
+
+   AllowOverride All
+
 #### Nginx
 
 The nginx configuration file should contain this code (along with other settings you may need) in your `location` block:
@@ -128,6 +132,31 @@ Ensure the `Web.config` and `index.php` files are in the same public-accessible 
         </system.webServer>
     </configuration>
 
+#### Google App Engine
+
+Two steps are required to successfully run your Slim application on Google App Engine. First, ensure the `app.yaml` file includes a default handler to `index.php`:
+
+    application: your-app-name
+    version: 1
+    runtime: php
+    api_version: 1
+    
+    handlers:
+    # ...
+    - url: /.*
+      script: public_html/index.php
+
+Next, edit your `index.php` file so Slim knows about the incoming URI:
+
+    $app = new Slim();
+    
+    // Google App Engine doesn't set $_SERVER['PATH_INFO']
+    $app->environment['PATH_INFO'] = $_SERVER['REQUEST_URI'];
+    
+    // ...
+    $app->run();
+
+   
 ## Documentation
 
 <http://docs.slimframework.com/>
